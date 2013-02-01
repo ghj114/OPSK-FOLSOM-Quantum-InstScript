@@ -1,0 +1,108 @@
+[DEFAULT]
+
+
+# ====SCHEDULER====
+scheduler_driver=nova.scheduler.multi.MultiScheduler
+compute_scheduler_driver=nova.scheduler.filter_scheduler.FilterScheduler
+volume_scheduler_driver=nova.scheduler.chance.ChanceScheduler
+default_scheduler_driver=nova.scheduler.chance.ChanceScheduler
+
+# ====DATABASE====
+sql_connection=mysql://nova:%MYSQL_NOVA_PASS%@%MYSQL_HOST%/nova
+
+# ====nova-compute====
+#libvirt_type=qemu
+libvirt_type=kvm
+#connection_type=libvirt
+firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
+compute_driver=nova.virt.libvirt.LibvirtDriver
+instance_name_template=instance-%08x
+#instances_path = /opt/data/nova/instances
+state_path=/var/lib/nova
+lock_path=/var/lock/nova
+api_paste_config=/etc/nova/api-paste.ini
+allow_resize_to_same_host=True
+start_guests_on_host_boot=false
+resume_guests_state_on_host_boot=true
+snapshot_image_format=qcow2
+force_raw_images=true
+libvirt_images_type=default
+use_cow_images=true
+libvirt_inject_password=false
+libvirt_inject_partition=2
+
+# ====nova-api====
+#enabled_apis=osapi_compute,osapi_volume
+enabled_apis=osapi_compute
+auth_strategy=keystone
+osapi_compute_extension=nova.api.openstack.compute.contrib.standard_extensions
+allow_admin_api=true
+ec2_dmz_host=%CONTROLLER_IP%
+s3_host=%CONTROLLER_IP%
+cc_host=%CONTROLLER_IP%
+
+# ====cinder====
+volume_api_class=nova.volume.cinder.API
+#iscsi_ip_prefix=iqn.2012-01.centrin:
+#iscsi_target_prefix=iqn.2012-01.centrin:
+#num_targets=100
+#iscsi_helper=tgtadm
+#ec2_url=http://10.42.0.6:8773/services/Cloud
+#keystone_ec2_url=http://10.42.0.6:5000/v2.0/ec2tokens
+
+# ====RABBITMQ====
+rabbit_host=%RABBITMQ_IP%
+#rabbit_password=yourpassword
+
+# ====GLANCE====
+image_service=nova.image.glance.GlanceImageService
+glance_api_servers=%GLANCE_IP%:9292
+
+###### nova-network
+#network_manager=nova.network.manager.FlatDHCPManager
+#network_manager=nova.network.manager.VlanManager
+multi_host=%MULTI_HOST%
+network_host=%NETWORK_HOST%
+network_manager=%NETWORK_TYPE%
+
+libvirt_use_virtio_for_bridges=true
+public_interface=%PUBLIC_INTERFACE%
+auto_assign_floating_ip=False
+default_floating_pool=%DEF_FLOATING_P%
+dhcpbridge_flagfile=/etc/nova/nova.conf
+dhcpbridge=/usr/bin/nova-dhcpbridge
+force_dhcp_release=True
+routing_source_ip=%CONTROLLER_IP_PUB%
+#vlan_interface=eth1
+#flat_interface=eth1
+fixed_range=%FIXED_RANGE%
+#network_size=1024
+my_ip=%COMPUTE_IP%
+#flat_network_bridge=br100
+#flat_interface=eth1
+#floating_range=10.42.0.32/27
+#network_size=32
+#flat_network_dhcp_start=192.168.22.33
+#flat_injected=False
+
+# ====NOVNC CONSOLE====
+novnc_enabled=true
+novncproxy_base_url= http://%CONTROLLER_IP_PUB%:6080/vnc_auto.html
+vncserver_proxyclient_address=%COMPUTE_IP%
+#vncserver_listen=%COMPUTE_IP%
+vncserver_listen=0.0.0.0
+
+# ====LOGS/STATE====
+verbose=True
+logdir=/var/log/nova
+#logging_exception_prefix = %(color)s%(asctime)s.%(msecs)03d TRACE %(name)s ^[[01;35m%(instance)s^[[00m
+#logging_debug_format_suffix = ^[[00;33mfrom (pid=%(process)d) %(funcName)s %(pathname)s:%(lineno)d^[[00m
+#logging_default_format_string = %(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [^[[00;36m-%(color)s] ^[[01;35m%(instance)s%(color)s%(message)s^[[00m
+#logging_context_format_string = %(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [^[[01;36m%(request_id)s ^[[00;36m%(user_id)s %(project_id)s%(color)s] ^[[01;35m%(instance)s%(color)s%(message)s^[[00m
+
+
+# ====Mis====
+#root_helper=sudo /root/openstack/nova-2012.2.3/.venv/bin/nova-rootwrap /root/openstack/nova-2012.2.3/etc/nova/rootwrap.conf
+root_helper=sudo
+rootwrap_config=/etc/nova/rootwrap.conf
+#use_deprecated_auth=false
