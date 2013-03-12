@@ -11,10 +11,11 @@ apt-get install -y  openvswitch-switch openvswitch-datapath-dkms
 
 # create bridge interfaces
 ovs-vsctl add-br br-int
-ovs-vsctl add-br br-eth1
-ovs-vsctl add-port br-eth1 ${DATA_NIC}
 ovs-vsctl add-br br-ex
 ovs-vsctl add-port br-ex ${PUBLIC_NIC}
+ip link set up br-ex
+#ovs-vsctl add-br br-eth1
+#ovs-vsctl add-port br-eth1 ${DATA_NIC}
 
 apt-get install -y mysql-client
 apt-get install -y quantum-plugin-openvswitch-agent quantum-dhcp-agent quantum-l3-agent vlan bridge-utils

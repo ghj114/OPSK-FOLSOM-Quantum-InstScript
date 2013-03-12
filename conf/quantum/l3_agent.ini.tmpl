@@ -25,6 +25,7 @@ root_helper = sudo /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf
 # Allow overlapping IP (Must have kernel build with CONFIG_NET_NS=y and
 # iproute2 package that supports namespaces).
 # use_namespaces = True
+use_namespaces = False
 
 # If use_namespaces is set as False then the agent can only configure one router.
 # This is done by setting the specific router_id.

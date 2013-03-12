@@ -10,15 +10,21 @@
 #                    eth1:
 #                    eth2:192.168.200.53
 #                    eth3:192.168.201.53
-#     node2          eth0:10.1.199.60(Not required)     compute node
-#                    eth1:
-#                    eth1:192.168.200.60
-#                    eth1:192.168.201.60
+#
+#     node2          eth0:10.1.199.7                   network  node
+#                    eth1:192.168.199.60
+#                    eth2:192.168.200.60
+#                    eth3:192.168.201.60
+#
+#     node3          eth0:10.1.199.7(Not required)     compute node
+#                    eth1:192.168.199.7
+#                    eth2:192.168.200.7
+#                    eth3:192.168.201.7
 
 
 #  network_type       device                                           network                         describe
 #----------------------------------------------------------------------------------------------------------------------------------
-#     vlan             eth0(public/external network)          network1:10.1.199.120/29        The Floating IPS
+#     gle/vlan         eth0(public/external network)          network1:10.1.199.120/29        The Floating IPS
 #
 #                      eth1 (private/internal networks)       network2:192.168.199.0/24       The service network: is used for the instance fixed IPs and to \
 #                                                                                                 create all the VLANs/subnets for the tenants.It is completely\
@@ -32,6 +38,7 @@
 
 # MYPUB_IP="10.1.247.62"
 MYPRI_IP="192.168.200.53"
+MYDATA_IP="192.168.199.60"  # network node eth1: data net
 
 #======Controller Node======
 CONTROLLER_IP="192.168.200.53"       # management networks on eth1
@@ -44,7 +51,7 @@ COMPUTE_IP=$MYPRI_IP
 NETWORK_IP=$MYPRI_IP
 
 QUANTUM_ENABLED=true
-QUANTUM_IP=$CONTROLLER_IP
+QUANTUM_IP=$MYDATA_IP
 QUANTUM_IP_PUB=$CONTROLLER_IP_PUB
 
 # =====mysql=====
