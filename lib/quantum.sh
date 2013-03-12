@@ -51,37 +51,49 @@ restart_service quantum-l3-agent
 
 # create network via quantum
 # --------------------------------------------------------------------------------------
-function create_network() {
-    if [[ "$NETWORK_TYPE" = "gre" ]]; then
-        # create internal network
-        TENANT_ID=$(keystone tenant-list | grep " service " | get_field 1)
-        INT_NET_ID=$(quantum net-create --tenant-id ${TENANT_ID} int_net | grep ' id ' | get_field 2)
-        INT_SUBNET_ID=$(quantum subnet-create --tenant-id ${TENANT_ID} --ip_version 4 --gateway ${INT_NET_GATEWAY} ${INT_NET_ID} ${INT_NET_RANGE} | grep ' id ' | get_field 2)
-        quantum subnet-update ${INT_SUBNET_ID} list=true --dns_nameservers 8.8.8.8 8.8.4.4
-        INT_ROUTER_ID=$(quantum router-create --tenant-id ${TENANT_ID} router-admin | grep ' id ' | get_field 2)
-        quantum router-interface-add ${INT_ROUTER_ID} ${INT_SUBNET_ID}
-        # create external network
-        EXT_NET_ID=$(quantum net-create --tenant-id ${TENANT_ID} ext_net -- --router:external=True | grep ' id ' | get_field 2)
-        quantum subnet-create --tenant-id ${TENANT_ID} --gateway=${EXT_NET_GATEWAY} --allocation-pool start=${EXT_NET_START},end=${EXT_NET_END} ${EXT_NET_ID} ${EXT_NET_RANGE} -- --enable_dhcp=False
-        quantum router-gateway-set ${INT_ROUTER_ID} ${EXT_NET_ID}
-    elif [[ "$NETWORK_TYPE" = "vlan" ]]; then
-        # create internal network
-        TENANT_ID=$(keystone tenant-list | grep " service " | get_field 1)
-        INT_NET_ID=$(quantum net-create --tenant-id ${TENANT_ID} int_net --provider:network_type vlan --provider:physical_network physnet1 --provider:segmentation_id 1024| grep ' id ' | get_field 2)
-        INT_SUBNET_ID=$(quantum subnet-create --tenant-id ${TENANT_ID} --ip_version 4 --gateway ${INT_NET_GATEWAY} ${INT_NET_ID} ${INT_NET_RANGE} | grep ' id ' | get_field 2)
-        quantum subnet-update ${INT_SUBNET_ID} list=true --dns_nameservers 8.8.8.8 8.8.4.4
-        INT_ROUTER_ID=$(quantum router-create --tenant-id ${TENANT_ID} router-admin | grep ' id ' | get_field 2)
-        quantum router-interface-add ${INT_ROUTER_ID} ${INT_SUBNET_ID}
-        # create external network
-        EXT_NET_ID=$(quantum net-create --tenant-id ${TENANT_ID} ext_net -- --router:external=True | grep ' id ' | get_field 2)
-        quantum subnet-create --tenant-id ${TENANT_ID} --gateway=${EXT_NET_GATEWAY} --allocation-pool start=${EXT_NET_START},end=${EXT_NET_END} ${EXT_NET_ID} ${EXT_NET_RANGE} -- --enable_dhcp=False
-        quantum router-gateway-set ${INT_ROUTER_ID} ${EXT_NET_ID}
-    else
-        echo "network type : gre, vlan"
-        echo "no such parameter of network type"
-        exit 1
-    fi
+function get_id () {
+    echo `$@ | awk '/ id / { print $4 }'`
 }
+function get_field() {
+    while read data; do
+        if [ "$1" -lt 0 ]; then
+            field="(\$(NF$1))"
+        else
+            field="\$$(($1 + 1))"
+        fi
+        echo "$data" | awk -F'[ \t]*\\|[ \t]*' "{print $field}"
+    done
+}
+
+if [[ "$NETWORK_TYPE" = "gre" ]]; then
+    # create internal network
+    TENANT_ID=$(keystone tenant-list | grep " service " | get_field 1)
+    INT_NET_ID=$(quantum net-create --tenant-id ${TENANT_ID} int_net | grep ' id ' | get_field 2)
+    INT_SUBNET_ID=$(quantum subnet-create --tenant-id ${TENANT_ID} --ip_version 4 --gateway ${INT_NET_GATEWAY} ${INT_NET_ID} ${INT_NET_RANGE} | grep ' id ' | get_field 2)
+    quantum subnet-update ${INT_SUBNET_ID} list=true --dns_nameservers 8.8.8.8 8.8.4.4
+    INT_ROUTER_ID=$(quantum router-create --tenant-id ${TENANT_ID} router-admin | grep ' id ' | get_field 2)
+    quantum router-interface-add ${INT_ROUTER_ID} ${INT_SUBNET_ID}
+    # create external network
+    EXT_NET_ID=$(quantum net-create --tenant-id ${TENANT_ID} ext_net -- --router:external=True | grep ' id ' | get_field 2)
+    quantum subnet-create --tenant-id ${TENANT_ID} --gateway=${EXT_NET_GATEWAY} --allocation-pool start=${EXT_NET_START},end=${EXT_NET_END} ${EXT_NET_ID} ${EXT_NET_RANGE} -- --enable_dhcp=False
+    quantum router-gateway-set ${INT_ROUTER_ID} ${EXT_NET_ID}
+elif [[ "$NETWORK_TYPE" = "vlan" ]]; then
+   # create internal network
+    TENANT_ID=$(keystone tenant-list | grep " service " | get_field 1)
+    INT_NET_ID=$(quantum net-create --tenant-id ${TENANT_ID} int_net --provider:network_type vlan --provider:physical_network physnet1 --provider:segmentation_id 1024| grep ' id ' | get_field 2)
+    INT_SUBNET_ID=$(quantum subnet-create --tenant-id ${TENANT_ID} --ip_version 4 --gateway ${INT_NET_GATEWAY} ${INT_NET_ID} ${INT_NET_RANGE} | grep ' id ' | get_field 2)
+    quantum subnet-update ${INT_SUBNET_ID} list=true --dns_nameservers 8.8.8.8 8.8.4.4
+    INT_ROUTER_ID=$(quantum router-create --tenant-id ${TENANT_ID} router-admin | grep ' id ' | get_field 2)
+    quantum router-interface-add ${INT_ROUTER_ID} ${INT_SUBNET_ID}
+    # create external network
+    EXT_NET_ID=$(quantum net-create --tenant-id ${TENANT_ID} ext_net -- --router:external=True | grep ' id ' | get_field 2)
+    quantum subnet-create --tenant-id ${TENANT_ID} --gateway=${EXT_NET_GATEWAY} --allocation-pool start=${EXT_NET_START},end=${EXT_NET_END} ${EXT_NET_ID} ${EXT_NET_RANGE} -- --enable_dhcp=False
+    quantum router-gateway-set ${INT_ROUTER_ID} ${EXT_NET_ID}
+else
+    echo "network type : gre, vlan"
+    echo "no such parameter of network type"
+    exit 1
+fi
 
 echo "network node install over!"
 sleep 1
