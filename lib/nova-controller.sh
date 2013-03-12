@@ -27,30 +27,25 @@ echo "GRANT ALL ON nova.* TO 'nova'@'%' IDENTIFIED BY '$MYSQL_SERVICE_PASS'; FLU
 #echo "GRANT ALL ON nova.* TO 'nova'@'%' IDENTIFIED BY 'service'; FLUSH PRIVILEGES;" | mysql -h192.168.1.100 -uroot -proot
 
 # api-paste.ini.tmpl
-sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" ./conf/nova/api-paste.ini.tmpl > ./conf/nova/api-paste.ini
-
+sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" ./conf/nova/api-paste.ini.tmpl > ./conf/nova/api-paste.ini
+sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/nova/api-paste.ini
 # nova.conf.tmpl
-sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" -e "s,%MYSQL_NOVA_PASS%,$MYSQL_SERVICE_PASS,g" -e "s,%CONTROLLER_IP%,$CONTROLLER_IP,g" -e "s,%CONTROLLER_IP_PUB%,$CONTROLLER_IP_PUB,g" ./conf/nova/nova.conf.tmpl > ./conf/nova/nova.conf
-sed -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g" -e "s,%GLANCE_IP%,$GLANCE_IP,g" -e "s,%FIXED_RANGE%,$FIXED_RANGE,g" -e "s,%COMPUTE_IP%,$COMPUTE_IP,g" -i ./conf/nova/nova.conf
-sed -e "s,%PUBLIC_INTERFACE%,$PUBLIC_INTERFACE,g" -e "s,%DEF_FLOATING_P%,$DEF_FLOATING_P,g" -e "s,%MULTI_HOST%,$MULTI_HOST,g" -i ./conf/nova/nova.conf
+sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" -e "s,%MYSQL_NOVA_PASS%,$MYSQL_SERVICE_PASS,g"  ./conf/nova/nova.conf.tmpl > ./conf/nova/nova.conf
+sed -e "s,%CONTROLLER_IP%,$CONTROLLER_IP,g" -e "s,%CONTROLLER_IP_PUB%,$CONTROLLER_IP_PUB,g" -i ./conf/nova/nova.conf
+sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g"  -i ./conf/nova/nova.conf
+sed -e "s,%GLANCE_IP%,$GLANCE_IP,g"  -e "s,%COMPUTE_IP%,$COMPUTE_IP,g" -i ./conf/nova/nova.conf
 
-if [ $MULTI_HOST = 'False' ]; then
-    sed -e "s,%NETWORK_HOST%,$CONTROLLER_IP,g" -i ./conf/nova/nova.conf
-else
-    sed -e "s,%NETWORK_HOST%,$MYPRI_IP,g" -i ./conf/nova/nova.conf
-fi 
 
-if [ $NETWORK_TYPE = 'VLAN' ];then
-    sed -e "s,%NETWORK_TYPE%,nova.network.manager.VlanManager,g" -i ./conf/nova/nova.conf
-elif [ $NETWORK_TYPE = 'FLATDHCP' ];then
-    sed -e "s,%NETWORK_TYPE%,nova.network.manager.FlatDHCPManager,g" -i ./conf/nova/nova.conf
-else
-    echo "ERROR:network type is not expecting"; exit -1;
-fi
+#if [ $NETWORK_TYPE = 'VLAN' ];then
+#    sed -e "s,%NETWORK_TYPE%,nova.network.manager.VlanManager,g" -i ./conf/nova/nova.conf
+#elif [ $NETWORK_TYPE = 'FLATDHCP' ];then
+#    sed -e "s,%NETWORK_TYPE%,nova.network.manager.FlatDHCPManager,g" -i ./conf/nova/nova.conf
+#else
+#    echo "ERROR:network type is not expecting"; exit -1;
+#fi
 
 cp ./conf/nova/nova.conf ./conf/nova/api-paste.ini /etc/nova/
 rm -f ./conf/nova/nova.conf ./conf/nova/api-paste.ini
-
 #chown nova:nova /etc/nova/nova.conf /etc/nova/api-paste.ini
 chown -R nova. /etc/nova
 chmod 644 /etc/nova/nova.conf
@@ -59,36 +54,34 @@ service nova-api restart
 nova-manage db sync
 
 for a in nova-api nova-scheduler nova-cert nova-consoleauth; do service "$a" restart; done 
-if [ $MULTI_HOST = 'False' ]; then service nova-network restart;fi
 
-#nova-manage network create private $FIXED_RANGE  --num_networks $FIXED_RANGE_NETWORK_COUNT --network_size $FIXED_RANGE_NETWORK_SIZE  --multi_host T --bridge=br100 --bridge_interface eth1 
-#nova-manage network create --label vlan1 --fixed_range_v4 10.0.1.0/24 --num_networks 1 --network_size 256 --vlan 1
+apt-get install -y quantum-server
+# api-paste.ini.tmpl
+sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g"  ./conf/quantum/api-paste.ini.tmpl > ./conf/quantum/api-paste.ini
+sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/quantum/api-paste.ini
 
-#create network
-#echo ${VLAN_ARRAYS[@]}; echo ${#VLAN_ARRAYS[@]}; echo ${#VLANID_ARRAYS[@]}
-if [ $NETWORK_TYPE = "VLAN" ] 
-then
-    if [ ${#VLAN_ARRAYS[@]} != ${#VLANID_ARRAYS[@]} ]; then echo "ERROR:The arrays of VLAN and VLANID!"; exit -1; fi
-    #for i in "${VLAN_ARRAY[@]}"; do echo $i | cut -d . -f 3; done
-    for (( i=0,j=0; i<${#VLAN_ARRAYS[@]} && j<${#VLANID_ARRAYS[@]} ;i++,j++ )); do
-        #lable='vlan'${VLANID_ARRAYS[$i]};  vlanid=${VLANID_ARRAYS[$j]}; echo $lable $vlanid
-	nova-manage network create --label='vlan'${VLANID_ARRAYS[$i]} --fixed_range_v4=${VLAN_ARRAYS[$i]} \
-                                   --num_networks=$FIXED_RANGE_NETWORK_COUNT --network_size=$FIXED_RANGE_NETWORK_SIZE --vlan=${VLANID_ARRAYS[$i]} \
-                                   --bridge_interface=$BRIDGE_INTERFACE
-    done 
-elif [ $NETWORK_TYPE = "FLATDHCP" ] 
-then
-    nova-manage network create --label=private --fixed_range_v4=$FIXED_RANGE  --num_networks=$FIXED_RANGE_NETWORK_COUNT --dns1=8.8.8.8 --dns2=8.8.4.4 \
-                               --network_size=$FIXED_RANGE_NETWORK_SIZE  --multi_host=$MULTI_HOST --bridge=br100 --bridge_interface=$BRIDGE_INTERFACE
+# quantum.conf.tmpl
+sed -e "s,%RABBITMQ_IP,$RABBITMQ_IP,g" ./conf/quantum/quantum.conf.tmpl > ./conf/quantum/quantum.conf
+
+if [[ "$NETWORK_TYPE" = "gre" ]]; then
+    sed -e "s.%QUANTUM_IP%,$QUANTUM_IP,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.gre.tmpl > ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+    sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" -e "s,%MYSQL_QUANTUM_PASS%,$MYSQL_SERVICE_PASS,g" -i ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+elif [[ "$NETWORK_TYPE" = "vlan" ]]; then
+    sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.vlan.tmpl > ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+    sed -e "s,%MYSQL_QUANTUM_PASS%,$MYSQL_SERVICE_PASS,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
 else
-    echo "ERROR:network type is not expecting"; exit -1;
+    echo "<network_type> must be 'gre' or 'vlan'."
+    exit 1
 fi
+cp ./conf/quantum/api-paste.ini ./conf/quantum/quantum.conf /etc/quantum/
+cp ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini /etc/quantum/plugins/openvswitch
+rm -f ./conf/quantum/api-paste.ini ./conf/quantum/quantum.conf
+rm -f ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini 
+#chown nova:nova /etc/nova/nova.conf /etc/nova/api-paste.ini
+chown -R quantum. /etc/quantum
+chmod 644 /etc/quantum/quantum.conf
 
-nova-manage floating create --ip_range=$FLOATING_RANGE --pool=$DEF_FLOATING_P --interface=$PUBLIC_INTERFACE
 
-echo "=============" 
-for a in nova-api nova-scheduler nova-cert nova-consoleauth; do service "$a" status; done 
-if [ $MULTI_HOST = 'False' ]; then service nova-network status;fi
 
 echo "nova-controller install over!"
 sleep 1

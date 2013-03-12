@@ -59,31 +59,18 @@ image_service=nova.image.glance.GlanceImageService
 glance_api_servers=%GLANCE_IP%:9292
 
 ###### nova-network
-#network_manager=nova.network.manager.FlatDHCPManager
-#network_manager=nova.network.manager.VlanManager
-multi_host=%MULTI_HOST%
-network_host=%NETWORK_HOST%
-network_manager=%NETWORK_TYPE%
+network_api_class=nova.network.quantumv2.api.API
+quantum_url=http://%CONTROLLER_IP%:9696
+quantum_auth_strategy=keystone
+quantum_admin_tenant_name=service
+quantum_admin_username=quantum
+quantum_admin_password=password
+quantum_admin_auth_url=http://%KEYSTONE_IP%:35357/v2.0
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
+linuxnet_interface_driver=nova.network.linux_net.LinuxOVSInterfaceDriver
+firewall_driver=nova.virt.libvirt.firewall.IptablesFirewallDriver
 
-libvirt_use_virtio_for_bridges=true
-public_interface=%PUBLIC_INTERFACE%
-auto_assign_floating_ip=False
-default_floating_pool=%DEF_FLOATING_P%
-dhcpbridge_flagfile=/etc/nova/nova.conf
-dhcpbridge=/usr/bin/nova-dhcpbridge
-force_dhcp_release=True
-routing_source_ip=%CONTROLLER_IP_PUB%
-#vlan_interface=eth1
-#flat_interface=eth1
-fixed_range=%FIXED_RANGE%
-#network_size=1024
 my_ip=%COMPUTE_IP%
-#flat_network_bridge=br100
-#flat_interface=eth1
-#floating_range=10.42.0.32/27
-#network_size=32
-#flat_network_dhcp_start=192.168.22.33
-#flat_injected=False
 
 # ====NOVNC CONSOLE====
 novnc_enabled=true

@@ -21,28 +21,34 @@ apt-get install -y quantum-plugin-openvswitch-agent quantum-dhcp-agent quantum-l
 
 # set configuration files for quantum
 # api-paste.ini.tmpl
-sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" ./conf/quantum/api-paste.ini.tmpl > ./conf/quantum/api-paste.ini
-#sed -e "s#<KEYSTONE_IP>#${KEYSTONE_IP}#" $BASE_DIR/conf/etc.quantum/api-paste.ini > /etc/quantum/api-paste.ini
+sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g"  ./conf/quantum/api-paste.ini.tmpl > ./conf/quantum/api-paste.ini
+sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/quantum/api-paste.ini
 
 # l3_agent.ini.tmpl
-sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" ./conf/quantum/l3_agent.ini.tmpl > ./conf/quantum/l3_agent.ini
+sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" ./conf/quantum/l3_agent.ini.tmpl > ./conf/quantum/l3_agent.ini
+sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/quantum/l3_agent.ini
 sed -e "s,%CONTROLLER_IP_PUB%,$CONTROLLER_IP_PUB,g" -i ./conf/quantum/l3_agent.ini
+
 # quantum.conf.tmpl
 sed -e "s,%RABBITMQ_IP,$RABBITMQ_IP,g" ./conf/quantum/quantum.conf.tmpl > ./conf/quantum/quantum.conf
 
+# ovs_quantum_plugin.ini.gre.tmpl 
 if [[ "$NETWORK_TYPE" = "gre" ]]; then
-    sed -e "s.%QUANTUM_IP%,$NETWORK_IP,g" -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.gre.tmpl > ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.gre
+    sed -e "s.%QUANTUM_IP%,$QUANTUM_IP,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.gre.tmpl > ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+    sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" -e "s,%MYSQL_QUANTUM_PASS%,$MYSQL_SERVICE_PASS,g" -i ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
 elif [[ "$NETWORK_TYPE" = "vlan" ]]; then
-    sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.vlan.tmpl > ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.vlan
+    sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.vlan.tmpl > ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+    sed -e "s,%MYSQL_QUANTUM_PASS%,$MYSQL_SERVICE_PASS,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
 else
     echo "<network_type> must be 'gre' or 'vlan'."
     exit 1
 fi
-
 cp ./conf/quantum/api-paste.ini ./conf/quantum/l3_agent.ini ./conf/quantum/quantum.conf /etc/quantum/
-rm -f ./conf/quantum/api-paste.ini ./conf/quantum/l3_agent.ini ./conf/quantum/quantum.conf 
-#chown -R quantum. /etc/quantum
-#chmod 644 /etc/quantum/quantum.conf
+cp ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini /etc/quantum/plugins/openvswitch
+rm -f ./conf/quantum/api-paste.ini ./conf/quantum/quantum.conf
+rm -f ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini 
+chown -R quantum. /etc/quantum
+chmod 644 /etc/quantum/quantum.conf
 
 # restart processes
 restart_service quantum-plugin-openvswitch-agent

@@ -26,7 +26,7 @@ api_paste_config = /etc/quantum/api-paste.ini
 
 # The strategy to be used for auth.
 # Supported values are 'keystone'(default), 'noauth'.
-# auth_strategy = keystone
+auth_strategy = keystone
 
 # Base MAC address. The first 3 octets will remain unchanged. If the
 # 4h octet is not 00, it will also used. The others will be
@@ -67,7 +67,7 @@ api_paste_config = /etc/quantum/api-paste.ini
 control_exchange = quantum
 
 # If passed, use a fake RabbitMQ provider
-# fake_rabbit = False
+fake_rabbit = False
 
 # Configuration options if sending notifications via kombu rpc (these are
 # the defaults)
