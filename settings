@@ -11,7 +11,7 @@
 #                    eth2:192.168.200.53
 #                    eth3:192.168.201.53
 #
-#     node2          eth0:10.1.199.7                   network  node
+#     node2          eth0:10.1.199.60                  network  node
 #                    eth1:192.168.199.60
 #                    eth2:192.168.200.60
 #                    eth3:192.168.201.60
@@ -93,36 +93,10 @@ EXT_NET_START='10.1.199.160'
 EXT_NET_END='10.1.199.165'
 EXT_NET_RANGE='10.1.199.0/24'
 
-MULTI_HOST="True"                   #multi network install; 'True'/'False'
-#MULTI_HOST="False"                   #multi network install; 'True'/'False'
-
-PUBLIC_INTERFACE="eth0"   # Interface for Floating IP traffic
-#VLAN_INTERFACE="eth1"     # Interface for Fixed IP VLAN traffic
-FLOATING_RANGE="10.1.199.120/29"
-DEF_FLOATING_P="nova-defalt"
-
-FIXED_RANGE_NETWORK_SIZE="256"
-FIXED_RANGE_NETWORK_COUNT="1"
-BRIDGE_INTERFACE="eth1"
-FIXED_RANGE_NET="192.168.199.0"  
-FIXED_RANGE_BITS="24"
-FIXED_RANGE="${FIXED_RANGE_NET}/${FIXED_RANGE_BITS}"
-#FIXED_RANGE_MASK="255.0.0.0"
-
-VLAN_ARRAYS=(10.0.101.0/24 10.0.102.0/24
-            10.0.103.0/24 10.0.104.0/24
-            10.0.105.0/24)            
-VLANID_ARRAYS=(101 102 103 104 105) # VLAN ID is 101,102,103,104,105
-
-
 # ======swift=====
 SWIFT_USED='False'  # 'True'/'False'
 #SWIFT_USED='True'  # 'True'/'False'
 SWIFT_IP=$CONTROLLER_IP
-
-
-
-
 
 # rabbitmq
 RABBITMQ_IP=$CONTROLLER_IP
