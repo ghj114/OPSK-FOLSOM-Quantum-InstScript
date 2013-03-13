@@ -1,5 +1,7 @@
+export SERVICE_TOKEN=CentRin
+export SERVICE_ENDPOINT=http://192.168.200.53:35357/v2.0/
 export OS_TENANT_NAME=admin
 export OS_USERNAME=admin
 export OS_PASSWORD=admin
-export OS_AUTH_URL=http://172.16.247.62:5000/v2.0/
+export OS_AUTH_URL=http://192.168.200.53:5000/v2.0/
 export OS_REGION_NAME=RegionOne
