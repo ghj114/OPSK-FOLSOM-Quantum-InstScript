@@ -81,7 +81,7 @@ keystone user-role-add --tenant_id $SERVICE_TENANT_ID --user-id $QUANTUM_USER_ID
 SERVICE_KEYSTONE_ID=$(get_id keystone service-create --name=keystone --type=identity)
 SERVICE_NOVA_ID=$(get_id keystone service-create --name=nova --type=compute)
 SERVICE_GLANCE_ID=$(get_id keystone service-create --name=glance --type=image)
-SERVICE_CINDER_ID=$(get_id keystone service-create --name=cinder --type=volume)
+#SERVICE_CINDER_ID=$(get_id keystone service-create --name=cinder --type=volume)
 SERVICE_QUANTUM_ID=$(get_id keystone service-create --name=quantum --type=quantum)
 #SERVICE_SWIFT_ID=$(get_id keystone service-create --name=swift --type=object-store) 
 #SERVICE_VOLUME_ID=$(get_id keystone service-create --name=volume --type=volume)

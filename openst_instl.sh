@@ -13,6 +13,7 @@ do
         -r | --rabbit) rabbitmq=true;; -g | --glance) glance=true;;
         -c ) controller=true;; -p | --compute) compute=true;; -d | --dashboard) dashboard=true;;
         -q | --quantum) quantum=true;;
+        --cinder) cinder=true;;
         --controller) mysql=true;keystone=true;glance=true;cinder=true;rabbitmq=true;controller=true;dashboard=true;;
         -a | --all) mysql=true;keystone=true;glance=true;cinder=true;rabbitmq=true;controller=true;compute=true;quantum=true;dashboard=true;;
 	    *) echo "unrecognized:$1"; echo "Usage: openSt_instl.sh mysql keystone ..."; exit -1;;
