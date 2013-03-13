@@ -19,6 +19,7 @@
 # SERVICE_TENANT_NAME - name of tenant containing service accounts
 # ENABLED_SERVICES - stack.sh's list of services to start
 # DEVSTACK_DIR - Top-level DevStack directory
+set -ex
 
 source settings
 
@@ -48,6 +49,7 @@ NOVA_USER_ID=$(get_id keystone user-create --name=nova --pass="$SERVICE_PASSWORD
 GLANCE_USER_ID=$(get_id keystone user-create --name=glance --pass="$SERVICE_PASSWORD" --tenant_id $SERVICE_TENANT_ID)
 CINDER_USER_ID=$(get_id keystone user-create --name=cinder --pass="$SERVICE_PASSWORD" --tenant_id $SERVICE_TENANT_ID) 
 QUANTUM_USER_ID=$(get_id keystone user-create --name=quantum --pass="$SERVICE_PASSWORD" --tenant_id $SERVICE_TENANT_ID) 
+  #QUANTUM_USER=$(get_id keystone user-create --name=quantum --pass="$SERVICE_PASSWORD" --tenant-id $SERVICE_TENANT --email=quantum@domain.com)
 #SWIFT_USER_ID=$(get_id keystone user-create --name=swift --pass="$SERVICE_PASSWORD" --tenant_id $SERVICE_TENANT_ID) 
 
 # Roles: admin,KeystoneAdmin,KeystoneServiceAdmin,anotherrole,Member
@@ -67,6 +69,7 @@ keystone user-role-add --tenant_id $SERVICE_TENANT_ID --user-id $NOVA_USER_ID --
 keystone user-role-add --tenant_id $SERVICE_TENANT_ID --user-id $GLANCE_USER_ID --role-id $ADMIN_ROLE_ID
 keystone user-role-add --tenant_id $SERVICE_TENANT_ID --user-id $CINDER_USER_ID --role-id $ADMIN_ROLE_ID 
 keystone user-role-add --tenant_id $SERVICE_TENANT_ID --user-id $QUANTUM_USER_ID --role-id $ADMIN_ROLE_ID 
+#keystone user-role-add --tenant-id $SERVICE_TENANT --user-id $QUANTUM_USER --role-id $ADMIN_ROLE
 #keystone user-role-add --tenant_id $SERVICE_TENANT_ID --user-id $SWIFT_USER_ID --role-id $ADMIN_ROLE_ID 
 
 # TODO(termie): these two might be dubious
@@ -81,8 +84,9 @@ keystone user-role-add --tenant_id $SERVICE_TENANT_ID --user-id $QUANTUM_USER_ID
 SERVICE_KEYSTONE_ID=$(get_id keystone service-create --name=keystone --type=identity)
 SERVICE_NOVA_ID=$(get_id keystone service-create --name=nova --type=compute)
 SERVICE_GLANCE_ID=$(get_id keystone service-create --name=glance --type=image)
-#SERVICE_CINDER_ID=$(get_id keystone service-create --name=cinder --type=volume)
-SERVICE_QUANTUM_ID=$(get_id keystone service-create --name=quantum --type=quantum)
+SERVICE_CINDER_ID=$(get_id keystone service-create --name=cinder --type=volume)
+SERVICE_QUANTUM_ID=$(get_id keystone service-create --name=quantum --type=network)
+                           #keystone service-create --name quantum --type network --description 'OpenStack Networking service'
 #SERVICE_SWIFT_ID=$(get_id keystone service-create --name=swift --type=object-store) 
 #SERVICE_VOLUME_ID=$(get_id keystone service-create --name=volume --type=volume)
 
