@@ -11,6 +11,46 @@ ntpdate $CONTROLLER_IP
 hwclock -w
 echo "59 8 * * * root /usr/sbin/ntpdate $CONTROLLER_IP;hwclock -w" >>/etc/crontab
 
+
+apt-get install -y kvm libvirt-bin pm-utils
+
+#cat << EOF >> /etc/libvirt/qemu.conf
+#cgroup_device_acl = [
+#    "/dev/null", "/dev/full", "/dev/zero",
+#    "/dev/random", "/dev/urandom",
+#    "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+#    "/dev/rtc", "/dev/hpet","/dev/net/tun",
+#]
+#EOF
+sed -i '/#listen_tls/s/#listen_tls/listen_tls/; /#listen_tcp/s/#listen_tcp/listen_tcp/; /#auth_tcp/s/#auth_tcp/auth_tcp/; /auth_tcp/s/sasl/none/'  /etc/libvirt/libvirtd.conf
+sed -i '/env libvirtd_opts/s/-d/-d -l/' /etc/init/libvirt-bin.conf
+sed -i '/libvirtd_opts/s/-d/-d -l/' /etc/default/libvirt-bin
+service libvirt-bin restart
+
+
+virsh net-destroy default
+virsh net-undefine default
+
+apt-get install -y openvswitch-switch
+ovs-vsctl add-br br-int
+apt-get -y install quantum-plugin-openvswitch-agent
+service openvswitch-switch restart
+service quantum-plugin-openvswitch-agent restart
+
+apt-get install -y python-mysqldb mysql-client curl
+apt-get install -y nova-compute 
+
+
+
+
+
+
+
+
+
+
+
+
 apt-get install -y python-mysqldb mysql-client curl
 apt-get install -y nova-compute 
 #apt-get install -y nova-compute nova-vncproxy 
