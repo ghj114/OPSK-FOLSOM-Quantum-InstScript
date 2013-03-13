@@ -18,6 +18,7 @@ ip link set up br-ex
 #ovs-vsctl add-port br-eth1 ${DATA_NIC}
 
 apt-get install -y mysql-client
+apt-get install -y python-keystone python-keystoneclient
 apt-get install -y quantum-plugin-openvswitch-agent quantum-dhcp-agent quantum-l3-agent vlan bridge-utils
 
 # set configuration files for quantum
@@ -31,7 +32,7 @@ sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%
 sed -e "s,%CONTROLLER_IP_PUB%,$CONTROLLER_IP_PUB,g" -i ./conf/quantum/l3_agent.ini
 
 # quantum.conf.tmpl
-sed -e "s,%RABBITMQ_IP,$RABBITMQ_IP,g" ./conf/quantum/quantum.conf.tmpl > ./conf/quantum/quantum.conf
+sed -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g" ./conf/quantum/quantum.conf.tmpl > ./conf/quantum/quantum.conf
 
 # ovs_quantum_plugin.ini.gre.tmpl 
 if [[ "$NETWORK_TYPE" = "gre" ]]; then
@@ -52,12 +53,21 @@ chown -R quantum. /etc/quantum
 chmod 644 /etc/quantum/quantum.conf
 
 # restart processes
-restart_service quantum-plugin-openvswitch-agent
-restart_service quantum-dhcp-agent
-restart_service quantum-l3-agent
+service quantum-plugin-openvswitch-agent restart
+service quantum-dhcp-agent restart
+service quantum-l3-agent restart
 
 # create network via quantum
 # --------------------------------------------------------------------------------------
+SERVICE_TOKEN=${SERVICE_TOKEN:-ADMIN} #echo $SERVICE_TOKEN
+SERVICE_ENDPOINT=${SERVICE_ENDPOINT:-http://localhost:35357/v2.0} #echo $SERVICE_ENDPOINT
+export SERVICE_TOKEN=$SERVICE_TOKEN
+export SERVICE_ENDPOINT=$SERVICE_ENDPOINT #export | grep SERVICE
+export OS_TENANT_NAME=$SERVICE_TENANT_NAME
+export OS_USERNAME=quantum
+export OS_PASSWORD=$SERVICE_PASSWORD
+export OS_AUTH_URL="http://${KEYSTONE_IP}:5000/v2.0/"
+
 function get_id () {
     echo `$@ | awk '/ id / { print $4 }'`
 }
