@@ -7,7 +7,7 @@ source settings
 #apt-get update
 #apt-get upgrade
 
-apt-get install -y  openvswitch-switch openvswitch-datapath-dkms
+apt-get install openvswitch-switch openvswitch-datapath-dkms
 
 # create bridge interfaces
 ovs-vsctl add-br br-int
@@ -19,7 +19,7 @@ ip link set up br-ex
 
 apt-get install -y mysql-client
 apt-get install -y python-keystone python-keystoneclient
-apt-get install -y quantum-plugin-openvswitch-agent quantum-dhcp-agent quantum-l3-agent vlan bridge-utils
+apt-get install quantum-plugin-openvswitch-agent quantum-dhcp-agent quantum-l3-agent vlan bridge-utils
 
 # set configuration files for quantum
 # api-paste.ini.tmpl
@@ -29,7 +29,7 @@ sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%
 # l3_agent.ini.tmpl
 sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" ./conf/quantum/l3_agent.ini.tmpl > ./conf/quantum/l3_agent.ini
 sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/quantum/l3_agent.ini
-sed -e "s,%CONTROLLER_IP_PUB%,$CONTROLLER_IP_PUB,g" -i ./conf/quantum/l3_agent.ini
+sed -e "s,%CONTROLLER_IP%,$CONTROLLER_IP,g" -i ./conf/quantum/l3_agent.ini
 
 # quantum.conf.tmpl
 sed -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g" ./conf/quantum/quantum.conf.tmpl > ./conf/quantum/quantum.conf
