@@ -6,15 +6,15 @@
 
 # hardWare
 #      name           nic                                   descri
-#     node1          eth0:10.1.199.53                  controller node
-#                    eth1:
-#                    eth2:192.168.200.53
-#                    eth3:192.168.201.53
+#     node1          eth0:192.168.0.10:manage network  controller node
+#                    eth1:10.1.199.7:external+api network                    
+#                    #eth2:192.168.200.53
+#                    #eth3:192.168.201.53
 #
-#     node2          eth0:10.1.199.60                  network  node
-#                    eth1:192.168.199.60
-#                    eth2:192.168.200.60
-#                    eth3:192.168.201.60
+#     node2          eth0:192.168.0.11:manage network  network  node
+#                    eth1:10.10.10.1/24:data network
+#                    eth2:
+#                    #eth3:192.168.201.60
 #
 #     node3          eth0:10.1.199.7(Not required)     compute node
 #                    eth1:192.168.199.7
@@ -37,12 +37,15 @@
 #
 
 # MYPUB_IP="10.1.247.62"
-MYPRI_IP="192.168.200.53"
-MYDATA_IP="192.168.199.60"  # network node eth1: data net
+MYPRI_IP="192.168.0.11"
+MYDATA_IP="10.10.10.1"  # network node eth1: data net
+
+PUBLIC_NIC='eth2' # floating IP
+DATA_NIC='eth1' # fixed IP
 
 #======Controller Node======
-CONTROLLER_IP="192.168.200.53"       # management networks on eth1
-CONTROLLER_IP_PUB="10.1.199.53"
+CONTROLLER_IP="192.168.0.10"       # management networks on eth1
+CONTROLLER_IP_PUB="10.1.199.7"
 
 #=====Computer Node=====
 COMPUTE_IP=$MYPRI_IP
@@ -81,8 +84,6 @@ GLANCE_IP=$CONTROLLER_IP
 GLANCE_IP_PUB=$CONTROLLER_IP_PUB
 
 # =====networking======
-PUBLIC_NIC='eth0' # floating IP
-DATA_NIC='eth1' # fixed IP
 
 NETWORK_TYPE="gre"               
 #NETWORK_TYPE="vlan"              
