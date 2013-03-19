@@ -86,7 +86,7 @@ rm -f ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
 chown -R quantum. /etc/quantum
 chmod 644 /etc/quantum/quantum.conf
 
-
+service quantum-server restart
 
 echo "nova-controller install over!"
 sleep 1
