@@ -21,6 +21,10 @@ apt-get install -y mysql-client
 apt-get install -y python-keystone python-keystoneclient
 apt-get install quantum-plugin-openvswitch-agent quantum-dhcp-agent quantum-l3-agent vlan bridge-utils
 
+mysql -h$MYSQL_HOST -uroot -p$MYSQL_ROOT_PASS -e 'DROP DATABASE IF EXISTS quantum;'
+mysql -h$MYSQL_HOST -uroot -p$MYSQL_ROOT_PASS -e 'CREATE DATABASE quantum;'
+echo "GRANT ALL ON quantum.* TO 'quantum'@'%' IDENTIFIED BY '$MYSQL_SERVICE_PASS'; FLUSH PRIVILEGES;" | mysql -h$MYSQL_HOST -uroot -p$MYSQL_ROOT_PASS
+
 # set configuration files for quantum
 # api-paste.ini.tmpl
 sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g"  ./conf/quantum/api-paste.ini.tmpl > ./conf/quantum/api-paste.ini
@@ -143,14 +147,14 @@ EXT_NET_GATEWAY="10.1.199.1"
 # Floating IP range
 POOL_FLOATING_START="10.1.199.145"	# First public IP to be used for VMs
 POOL_FLOATING_END="10.1.199.150"	# Last public IP to be used for VMs 
-create_net $TENANT_NAME $TENANT_NETWORK_NAME $PROV_ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
-create_ext_net $EXT_NET_NAME $EXT_NET_CIDR $EXT_NET_BRIDGE $EXT_NET_GATEWAY $POOL_FLOATING_START $POOL_FLOATING_END
-connect_providerrouter_to_externalnetwork $PROV_ROUTER_NAME $EXT_NET_NAME
+#create_net $TENANT_NAME $TENANT_NETWORK_NAME $PROV_ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
+#create_ext_net $EXT_NET_NAME $EXT_NET_CIDR $EXT_NET_BRIDGE $EXT_NET_GATEWAY $POOL_FLOATING_START $POOL_FLOATING_END
+#connect_providerrouter_to_externalnetwork $PROV_ROUTER_NAME $EXT_NET_NAME
 
 # Configure br-ex to reach public network :
-ip addr flush dev $EXT_NET_BRIDGE
-ip addr add $EXT_GW_IP/$EXT_NET_LEN dev $EXT_NET_BRIDGE
-ip link set $EXT_NET_BRIDGE up
+#ip addr flush dev $EXT_NET_BRIDGE
+#ip addr add $EXT_GW_IP/$EXT_NET_LEN dev $EXT_NET_BRIDGE
+#ip link set $EXT_NET_BRIDGE up
 
 
 #function get_field() {
