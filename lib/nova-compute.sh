@@ -14,55 +14,58 @@ echo "59 8 * * * root /usr/sbin/ntpdate $CONTROLLER_IP;hwclock -w" >>/etc/cronta
 
 apt-get install -y kvm libvirt-bin pm-utils
 
-#cat << EOF >> /etc/libvirt/qemu.conf
-#cgroup_device_acl = [
-#    "/dev/null", "/dev/full", "/dev/zero",
-#    "/dev/random", "/dev/urandom",
-#    "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
-#    "/dev/rtc", "/dev/hpet","/dev/net/tun",
-#]
-#EOF
+cat << EOF >> /etc/libvirt/qemu.conf
+cgroup_device_acl = [
+    "/dev/null", "/dev/full", "/dev/zero",
+    "/dev/random", "/dev/urandom",
+    "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+    "/dev/rtc", "/dev/hpet","/dev/net/tun",
+]
+EOF
+
 sed -i '/#listen_tls/s/#listen_tls/listen_tls/; /#listen_tcp/s/#listen_tcp/listen_tcp/; /#auth_tcp/s/#auth_tcp/auth_tcp/; /auth_tcp/s/sasl/none/'  /etc/libvirt/libvirtd.conf
 sed -i '/env libvirtd_opts/s/-d/-d -l/' /etc/init/libvirt-bin.conf
 sed -i '/libvirtd_opts/s/-d/-d -l/' /etc/default/libvirt-bin
-service libvirt-bin restart
-
 
 virsh net-destroy default
 virsh net-undefine default
+service libvirt-bin restart
+
 
 apt-get install -y openvswitch-switch
-ovs-vsctl add-br br-int
-apt-get -y install quantum-plugin-openvswitch-agent
 service openvswitch-switch restart
+ovs-vsctl add-br br-int
+
+apt-get -y install quantum-plugin-openvswitch-agent
+
+# quantum.conf.tmpl
+sed -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g" ./conf/quantum/quantum.conf.tmpl > ./conf/quantum/quantum.conf
+
+# ovs_quantum_plugin.ini.gre.tmpl 
+if [[ "$NETWORK_TYPE" = "gre" ]]; then
+    sed -e "s,%QUANTUM_IP%,$QUANTUM_IP,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.gre.tmpl > ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+    sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" -e "s,%MYSQL_QUANTUM_PASS%,$MYSQL_SERVICE_PASS,g" -i ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+elif [[ "$NETWORK_TYPE" = "vlan" ]]; then
+    sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini.vlan.tmpl > ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+    sed -e "s,%MYSQL_QUANTUM_PASS%,$MYSQL_SERVICE_PASS,g" ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+else
+    echo "<network_type> must be 'gre' or 'vlan'."
+    exit 1
+fi
+cp  ./conf/quantum/quantum.conf /etc/quantum/
+cp ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini /etc/quantum/plugins/openvswitch
+rm -f ./conf/quantum/quantum.conf
+rm -f ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
+chown -R quantum. /etc/quantum
+chmod 644 /etc/quantum/quantum.conf
+
 service quantum-plugin-openvswitch-agent restart
 
-apt-get install -y python-mysqldb mysql-client curl
-apt-get install -y nova-compute 
-
-
-
-
-
-
-
-
-
-
-
 
 apt-get install -y python-mysqldb mysql-client curl
-apt-get install -y nova-compute 
+apt-get install -y nova-compute-kvm
 #apt-get install -y nova-compute nova-vncproxy 
 #apt-get install -y novnc
-
-if [ $MULTI_HOST = 'True' ]; then apt-get install -y nova-network;/etc/init.d/networking restart;fi
-
-/etc/init.d/networking restart
-
-virsh net-destroy default
-virsh net-undefine default
-service libvirt-bin restart
 
 # api-paste.ini.tmpl
 sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" ./conf/nova/api-paste.ini.tmpl > ./conf/nova/api-paste.ini
@@ -73,20 +76,6 @@ sed -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g" -e "s,%GLANCE_IP%,$GLANCE_IP,g" -e "s,%F
 sed -e "s,%PUBLIC_INTERFACE%,$PUBLIC_INTERFACE,g" -e "s,%DEF_FLOATING_P%,$DEF_FLOATING_P,g" -e "s,%MULTI_HOST%,$MULTI_HOST,g" -i ./conf/nova/nova.conf
 
 
-if [ $MULTI_HOST = 'False' ]; then
-    sed -e "s,%NETWORK_HOST%,$CONTROLLER_IP,g" -i ./conf/nova/nova.conf
-else
-    sed -e "s,%NETWORK_HOST%,$MYPRI_IP,g" -i ./conf/nova/nova.conf                                                                                        
-fi                                                                                                                                            
-                                                                                                                                              
-if [ $NETWORK_TYPE = 'VLAN' ];then                                                                                                            
-    sed -e "s,%NETWORK_TYPE%,nova.network.manager.VlanManager,g" -i ./conf/nova/nova.conf                                                                 
-elif [ $NETWORK_TYPE = 'FLATDHCP' ];then                                                                                                      
-    sed -e "s,%NETWORK_TYPE%,nova.network.manager.FlatDHCPManager,g" -i ./conf/nova/nova.conf                                                             
-else                                                                                                                                          
-    echo "ERROR:network type is not expecting"; exit -1;                                                                                      
-fi                                                     
-
 cp ./conf/nova/nova.conf ./conf/nova/api-paste.ini /etc/nova/
 rm -f ./conf/nova/nova.conf ./conf/nova/api-paste.ini
 chown -R nova. /etc/nova
@@ -94,12 +83,10 @@ chmod 644 /etc/nova/nova.conf
 
 #for a in nova-compute novnc; do service "$a" restart; done 
 service nova-compute restart
-if [ $MULTI_HOST = 'True' ]; then service nova-network restart;fi
 
 echo "================"
 #for a in nova-compute novnc; do service "$a" status; done 
 service nova-compute status
-if [ $MULTI_HOST = 'True' ]; then service nova-network status;fi
 
 echo "nova-compute install over!"
 sleep 1
