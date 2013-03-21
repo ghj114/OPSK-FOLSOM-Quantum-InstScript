@@ -34,6 +34,7 @@ sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" -e "s,%MYSQL_NOVA_PASS%,$MYSQL_SERVICE_PAS
 sed -e "s,%CONTROLLER_IP%,$CONTROLLER_IP,g" -e "s,%CONTROLLER_IP_PUB%,$CONTROLLER_IP_PUB,g" -i ./conf/nova/nova.conf
 sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g"  -i ./conf/nova/nova.conf
 sed -e "s,%GLANCE_IP%,$GLANCE_IP,g"  -e "s,%COMPUTE_IP%,$COMPUTE_IP,g" -i ./conf/nova/nova.conf
+sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/nova/nova.conf
 
 
 #if [ $NETWORK_TYPE = 'VLAN' ];then

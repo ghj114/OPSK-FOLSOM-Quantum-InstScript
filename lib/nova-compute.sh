@@ -38,6 +38,10 @@ ovs-vsctl add-br br-int
 
 apt-get -y install quantum-plugin-openvswitch-agent
 
+# api-paste.ini.tmpl
+sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g"  ./conf/quantum/api-paste.ini.tmpl > ./conf/quantum/api-paste.ini
+sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/quantum/api-paste.ini
+
 # quantum.conf.tmpl
 sed -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g" ./conf/quantum/quantum.conf.tmpl > ./conf/quantum/quantum.conf
 
@@ -52,9 +56,9 @@ else
     echo "<network_type> must be 'gre' or 'vlan'."
     exit 1
 fi
-cp  ./conf/quantum/quantum.conf /etc/quantum/
+cp  ./conf/quantum/quantum.conf conf/quantum/api-paste.ini /etc/quantum/
 cp ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini /etc/quantum/plugins/openvswitch
-rm -f ./conf/quantum/quantum.conf
+rm -f ./conf/quantum/quantum.conf conf/quantum/api-paste.ini
 rm -f ./conf/quantum-plugins-openvswitch/ovs_quantum_plugin.ini
 chown -R quantum. /etc/quantum
 chmod 644 /etc/quantum/quantum.conf
@@ -68,13 +72,14 @@ apt-get install -y nova-compute-kvm
 #apt-get install -y novnc
 
 # api-paste.ini.tmpl
-sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" ./conf/nova/api-paste.ini.tmpl > ./conf/nova/api-paste.ini
-
+sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" ./conf/nova/api-paste.ini.tmpl > ./conf/nova/api-paste.ini
+sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/nova/api-paste.ini
 # nova.conf.tmpl
-sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" -e "s,%MYSQL_NOVA_PASS%,$MYSQL_SERVICE_PASS,g" -e "s,%CONTROLLER_IP%,$CONTROLLER_IP,g" -e "s,%CONTROLLER_IP_PUB%,$CONTROLLER_IP_PUB,g" ./conf/nova/nova.conf.tmpl > ./conf/nova/nova.conf
-sed -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g" -e "s,%GLANCE_IP%,$GLANCE_IP,g" -e "s,%FIXED_RANGE%,$FIXED_RANGE,g" -e "s,%COMPUTE_IP%,$COMPUTE_IP,g" -i ./conf/nova/nova.conf
-sed -e "s,%PUBLIC_INTERFACE%,$PUBLIC_INTERFACE,g" -e "s,%DEF_FLOATING_P%,$DEF_FLOATING_P,g" -e "s,%MULTI_HOST%,$MULTI_HOST,g" -i ./conf/nova/nova.conf
-
+sed -e "s,%MYSQL_HOST%,$MYSQL_HOST,g" -e "s,%MYSQL_NOVA_PASS%,$MYSQL_SERVICE_PASS,g"  ./conf/nova/nova.conf.tmpl > ./conf/nova/nova.conf
+sed -e "s,%CONTROLLER_IP%,$CONTROLLER_IP,g" -e "s,%CONTROLLER_IP_PUB%,$CONTROLLER_IP_PUB,g" -i ./conf/nova/nova.conf
+sed -e "s,%KEYSTONE_IP%,$KEYSTONE_IP,g" -e "s,%RABBITMQ_IP%,$RABBITMQ_IP,g"  -i ./conf/nova/nova.conf
+sed -e "s,%GLANCE_IP%,$GLANCE_IP,g"  -e "s,%COMPUTE_IP%,$COMPUTE_IP,g" -i ./conf/nova/nova.conf
+sed -e "s,%SERVICE_TENANT_NAME%,$SERVICE_TENANT_NAME,g" -e "s,%SERVICE_PASSWORD%,$SERVICE_PASSWORD,g" -i ./conf/nova/nova.conf
 
 cp ./conf/nova/nova.conf ./conf/nova/api-paste.ini /etc/nova/
 rm -f ./conf/nova/nova.conf ./conf/nova/api-paste.ini
